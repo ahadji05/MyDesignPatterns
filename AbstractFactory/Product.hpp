@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 class Product {
 protected:
     int m_serial_no;

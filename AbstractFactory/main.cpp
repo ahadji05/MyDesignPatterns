@@ -1,7 +1,6 @@
 
 #include <vector>
 #include <memory>
-#include <cstdlib>
 
 #include "ProductA.hpp"
 #include "ProductB.hpp"

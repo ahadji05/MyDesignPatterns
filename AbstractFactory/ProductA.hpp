@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Product.hpp"
-#include <iostream>
 
 class ProductA: public Product {
 
