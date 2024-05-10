@@ -1,9 +1,9 @@
 
-CXX=g++
+CXX=clang++
 CXXFLAGS= -O3 -std=c++11 
 
-program: main.cpp
+kdtree: main.cpp
 	$(CXX) $(CXXFLAGS) $? -o $@
 
 clean:
-	rm program
+	rm kdtree

@@ -37,11 +37,16 @@ struct node_t {
     node_t* m_left = nullptr;
     node_t* m_right = nullptr;
 
+    node_t<T,N> & operator=( node_t<T,N> const& ) = delete;
+    node_t<T,N>( node_t<T,N> const& ) = delete;
+
     node_t( dataset_type dataset ) : m_dataset(dataset) {
         m_is_leaf = true;
         m_left = nullptr;
         m_right = nullptr;
     }
+
+    ~node_t() = default;
 
     bool isLeaf()       const { return m_is_leaf; }
     int getID()         const { return m_key.m_id; }
@@ -59,14 +64,55 @@ node_t<T,N> *make_new_node( std::deque<key<T,N>> dataset, bool verbose = false )
 }
 
 template<typename T, int N>
-int find_dim_with_highest_stdev(  std::deque<key<T,N>> const& dataset, bool verbose = false ){
-    if( dataset[0].m_value.size() > 1 )
-        throw std::runtime_error("DIM SIZE MUST BE 1");
-    return 0;
+int64_t find_index_of_key( std::deque<key<T,N>> const& dataset, key<T,N> const& k, bool verbose = false ){
+    int64_t index = 0;
+    while ( index < (int64_t)dataset.size() ){
+        if ( dataset[index].m_id == k.m_id )
+            return index;
+        ++index;
+    }
+
+    return -1;
 }
 
 template<typename T, int N>
-key<T,N> find_median_of_selected_dim(  std::deque<key<T,N>> &dataset, int dim, bool verbose = false ){
+T find_min( std::deque<key<T,N>> const& dataset, int dim, bool verbose = false ){
+    T min_value = 1e9;
+    for( key<T,N> const& e : dataset )
+        if ( e.m_value[dim] < min_value )
+            min_value = e.m_value[dim];
+    return min_value;
+}
+
+template<typename T, int N>
+T find_max( std::deque<key<T,N>> const& dataset, int dim, bool verbose = false ){
+    T max_value = -1e9;
+    for( key<T,N> const& e : dataset )
+        if ( e.m_value[dim] > max_value )
+            max_value = e.m_value[dim];
+    return max_value;
+}
+
+template<typename T, int N>
+int find_dim_with_highest_spread(  std::deque<key<T,N>> const& dataset, bool verbose = false ){
+    
+    T max_spread = 0;
+    int max_dim = 0;
+    for( int dim(0); dim < N; ++dim ){
+        T min_value = find_min(dataset,dim,verbose);
+        T max_value = find_max(dataset,dim,verbose);
+        T spread = std::abs(max_value - min_value);
+        if ( spread > max_spread ){
+            max_spread = spread;
+            max_dim = dim;
+        }
+    }
+    
+    return max_dim;
+}
+
+template<typename T, int N>
+key<T,N> find_median_of_selected_dim(  std::deque<key<T,N>> & dataset, int dim, bool verbose = false ){
 
     // copy the values of the dim of interest in a vector and sort them; then find the median.
     std::vector<T> vec(dataset.size());
@@ -95,8 +141,8 @@ key<T,N> find_median_of_selected_dim(  std::deque<key<T,N>> &dataset, int dim, b
 }
 
 template<typename T, int N>
-void split_the_dataset_in_two_based_on_median( T median, int dim, std::deque<key<T,N>> &dataset,
-    std::deque<key<T,N>> &dataset_left, std::deque<key<T,N>> &dataset_right ){
+void split_the_dataset_in_two_based_on_median( T median, int dim, std::deque<key<T,N>> & dataset,
+    std::deque<key<T,N>> & dataset_left, std::deque<key<T,N>> & dataset_right ){
     dataset_left.clear();
     dataset_right.clear();
     while( dataset.size() > 0 ){
@@ -110,10 +156,10 @@ void split_the_dataset_in_two_based_on_median( T median, int dim, std::deque<key
 }
 
 template<typename T, int N>
-void split_balanced(node_t<T,N> *node, bool verbose = false){
+void split_balanced(node_t<T,N> * node, bool verbose = false){
     if( node->m_dataset.size() > 0 ){
         // find the dim with the highest stdev
-        int dim = find_dim_with_highest_stdev(node->m_dataset, verbose);
+        int dim = find_dim_with_highest_spread(node->m_dataset, verbose);
         node->m_split_dim = dim;
         
         // find the median key based on the selected dim
@@ -131,7 +177,7 @@ void split_balanced(node_t<T,N> *node, bool verbose = false){
             split_balanced(node->m_left, verbose);
         }
 
-        // if ( verbose )
+        if ( verbose )
             std::cout << node->m_key.m_id << ", " << node->m_key.m_value[0] << std::endl;
 
         // create right node and continue spliting
@@ -145,33 +191,13 @@ void split_balanced(node_t<T,N> *node, bool verbose = false){
         node->m_is_leaf = false;
 
     if( node->isLeaf() )
-        // if ( verbose )
-            std::cout << "reached leaf node!" << std::endl;
-}
-
-template<typename T, int N>
-void breakdown_left(node_t<T,N> *node, bool verbose = false){
-    if( node->m_dataset.size() > 0 ){
-        node->m_is_leaf = false;
-        node->m_key = node->m_dataset[0];
-        node->m_dataset.pop_front();
-        node->m_left = make_new_node(node->m_dataset, verbose);
-        node->m_dataset.clear();
-        breakdown_left(node->m_left, verbose);
-        if ( verbose )
-            std::cout << node->m_key.m_id << ", " << node->m_key.m_value[0] << std::endl;
-    } else {
-        node->m_is_leaf = true;
-    }
-
-    if( node->isLeaf() )
         if ( verbose )
             std::cout << "reached leaf node!" << std::endl;
 }
 
 template<typename T, int N>
-int make_kdtree( node_t<T,N>* root, std::deque<std::array<T,N>> const& data ){
-    std::cout << "Called make_kdtree( std::deque )" << std::endl;
+node_t<T,N> * build_kdtree( std::deque<std::array<T,N>> const& data ){
+    std::cout << "Called build_kdtree( std::deque )" << std::endl;
 
     std::deque<key<T,N>> dataset;
 
@@ -182,22 +208,66 @@ int make_kdtree( node_t<T,N>* root, std::deque<std::array<T,N>> const& data ){
         dataset.emplace_back( k );
     }
 
-    root = make_new_node<T,N>( dataset );
-
-    // breakdown_left(root,true);
+    node_t<T,N> * root = new node_t<T,N>( dataset );
 
     split_balanced(root);
 
-    return 0;
+    return root;
 }
 
 template<typename T, int N>
-int make_kdtree( node_t<T,N>* root, std::vector<std::array<T,N>> const& data ){
-    std::cout << "Called make_kdtree( std::vector )" << std::endl;
+node_t<T,N> * build_kdtree( std::vector<std::array<T,N>> const& data ){
+    std::cout << "Called build_kdtree( std::vector )" << std::endl;
 
     std::deque<std::array<T,N>> tempData;
     for( auto e : data )
         tempData.emplace_back(e);
     
-    return make_kdtree<T,N>( root, tempData );
+    return build_kdtree<T,N>( tempData );
+}
+
+template<typename T, int N>
+node_t<T,N> * build_kdtree( std::list<std::array<T,N>> const& data ){
+    std::cout << "Called build_kdtree( std::list )" << std::endl;
+
+    std::deque<std::array<T,N>> tempData;
+    for( auto e : data )
+        tempData.emplace_back(e);
+    
+    return build_kdtree<T,N>( tempData );
+}
+
+template<typename T, int N>
+void print_kdtree( node_t<T,N> * node ){
+    if(node->m_left)
+        print_kdtree(node->m_left);
+    
+    std::cout << node->m_key.m_value[0] << " is_leaf?  " << (node->isLeaf() ? "yes" : "no") << "  ";
+    if(!node->isLeaf()){
+        if(node->m_left)
+            std::cout << node->m_left->m_key.m_value[0] << " ";
+        if(node->m_right)
+            std::cout << node->m_right->m_key.m_value[0] << " ";
+    }
+    std::cout << std::endl;
+
+    if(node->m_right)
+        print_kdtree(node->m_right);
+}
+
+template<typename T, int N>
+void destroy_kdtree( node_t<T,N> * node, bool verbose = false ){
+    if (verbose)
+        std::cout << "destroying node " << node->getID() << std::endl;
+
+    if (node == nullptr)
+		return;
+
+	if (node->m_left)
+		destroy_kdtree(node->m_left,verbose);
+
+	if (node->m_right)
+		destroy_kdtree(node->m_right,verbose);
+
+	delete node;
 }

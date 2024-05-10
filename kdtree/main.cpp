@@ -12,14 +12,18 @@ int main(){
 
     std::cout << "Program started..." << std::endl;
 
-    int numData = 6;
+    int numData = 17;
     std::vector<std::array<dtype,dim>> data;
 
     err = generate_random<dtype,dim>(numData, data, true);
     if(err){ std::cout << "error in call to generate_random<dtype,dim>(numData, data, true);" << std::endl; return EXIT_FAILURE; }
 
-    node_t<dtype,dim> *root;
-    err = make_kdtree<dtype,dim>(root, data);
+    node_t<dtype,dim> *root = build_kdtree<dtype,dim>( data );
+
+    std::cout << "root node: " << root->m_key.m_value[0] << std::endl;
+    print_kdtree<dtype,dim>(root);
+
+    destroy_kdtree(root);
 
     return 0;
 }
