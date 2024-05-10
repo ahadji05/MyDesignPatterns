@@ -12,7 +12,7 @@ int main(){
 
     std::cout << "Program started..." << std::endl;
 
-    int numData = 8;
+    int numData = 6;
     std::vector<std::array<dtype,dim>> data;
 
     err = generate_random<dtype,dim>(numData, data, true);

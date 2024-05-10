@@ -34,8 +34,8 @@ struct node_t {
     dataset_type m_dataset;
     bool m_is_leaf;
     int  m_split_dim;
-    node_t* m_left;
-    node_t* m_right;
+    node_t* m_left = nullptr;
+    node_t* m_right = nullptr;
 
     node_t( dataset_type dataset ) : m_dataset(dataset) {
         m_is_leaf = true;
@@ -68,23 +68,27 @@ int find_dim_with_highest_stdev(  std::deque<key<T,N>> const& dataset, bool verb
 template<typename T, int N>
 key<T,N> find_median_of_selected_dim(  std::deque<key<T,N>> &dataset, int dim, bool verbose = false ){
 
+    // copy the values of the dim of interest in a vector and sort them; then find the median.
     std::vector<T> vec(dataset.size());
     for( size_t i(0); i<vec.size(); ++i )
         vec[i] = dataset[i].m_value[dim];
-
     std::sort(vec.begin(), vec.end());
     T median = vec[vec.size()/2];
 
+    // loop over the dataset over the dim of interest and identify the key that corresponds to the median.
     int target;
-    T current_diff = 1e9;
+    T closest = 1e9;
     key<T,N> median_key;
     for( size_t i(0); i < dataset.size(); ++i ){
-        if ( std::abs(dataset[i].m_value[dim] - median) < current_diff ){
+        T diff = std::abs(dataset[i].m_value[dim] - median);
+        if ( diff < closest ){
             median_key = dataset[i];
             target = i;
+            closest = diff;
         }
     }
 
+    // the key is removed from the dataset before it is returned as the output of this function.
     dataset.erase(dataset.begin()+target);
 
     return median_key;
@@ -108,20 +112,20 @@ void split_the_dataset_in_two_based_on_median( T median, int dim, std::deque<key
 template<typename T, int N>
 void split_balanced(node_t<T,N> *node, bool verbose = false){
     if( node->m_dataset.size() > 0 ){
-        // find the dime with the highest stdev
+        // find the dim with the highest stdev
         int dim = find_dim_with_highest_stdev(node->m_dataset, verbose);
+        node->m_split_dim = dim;
         
-        // find the median key based on the selected dime
+        // find the median key based on the selected dim
         key<T,N> median_key = find_median_of_selected_dim(node->m_dataset, dim, verbose);
         node->m_key = median_key;
 
-        // split the dataset in two
+        // split the dataset in two based on the median
         std::deque<key<T,N>> dataset_left, dataset_right;
         T median = median_key.m_value[dim];
-
         split_the_dataset_in_two_based_on_median(median, dim, node->m_dataset, dataset_left, dataset_right );
         
-        // make left node and split
+        // create left node and continue spliting
         if(dataset_left.size()>0){
             node->m_left = make_new_node(dataset_left, verbose);
             split_balanced(node->m_left, verbose);
@@ -130,18 +134,18 @@ void split_balanced(node_t<T,N> *node, bool verbose = false){
         // if ( verbose )
             std::cout << node->m_key.m_id << ", " << node->m_key.m_value[0] << std::endl;
 
-        // make right node and split
+        // create right node and continue spliting
         if(dataset_right.size()>0){
             node->m_right = make_new_node(dataset_right, verbose);
             split_balanced(node->m_right, verbose);   
         }
     }
 
-    if ( node->m_left && node->m_right )
+    if ( node->m_left || node->m_right )
         node->m_is_leaf = false;
 
     if( node->isLeaf() )
-        if ( verbose )
+        // if ( verbose )
             std::cout << "reached leaf node!" << std::endl;
 }
 
