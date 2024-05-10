@@ -260,14 +260,13 @@ void destroy_kdtree( node_t<T,N> * node, bool verbose = false ){
     if (verbose)
         std::cout << "destroying node " << node->getID() << std::endl;
 
-    if (node == nullptr)
-		return;
+    if (node == nullptr) return;
 
-	if (node->m_left)
-		destroy_kdtree(node->m_left,verbose);
+    if (node->m_left)
+        destroy_kdtree(node->m_left,verbose);
 
-	if (node->m_right)
-		destroy_kdtree(node->m_right,verbose);
-
-	delete node;
+    if (node->m_right)
+        destroy_kdtree(node->m_right,verbose);
+    
+    delete node;
 }
