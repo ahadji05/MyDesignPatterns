@@ -1,0 +1,25 @@
+==60659== Memcheck, a memory error detector
+==60659== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==60659== Using Valgrind-3.18.1-42b08ed5bd-20211015 and LibVEX; rerun with -h for copyright info
+==60659== Command: ./kdtree
+==60659== Parent PID: 60658
+==60659== 
+--60659-- 
+--60659-- Valgrind options:
+--60659--    --leak-check=full
+--60659--    --show-leak-kinds=all
+--60659--    --track-origins=yes
+--60659--    --verbose
+--60659--    --log-file=valgrind-out.txt
+--60659-- Contents of /proc/version:
+--60659--   Linux version 6.5.0-28-generic (buildd@lcy02-amd64-098) (x86_64-linux-gnu-gcc-12 (Ubuntu 12.3.0-1ubuntu1~22.04) 12.3.0, GNU ld (GNU Binutils for Ubuntu) 2.38) #29~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Apr  4 14:39:20 UTC 2
+--60659-- .
+--60659-- .
+--60659-- .
+==60659== HEAP SUMMARY:
+==60659==     in use at exit: 0 bytes in 0 blocks
+==60659==   total heap usage: 14,886,508 allocs, 14,886,508 frees, 4,542,170,752 bytes allocated
+==60659== 
+==60659== All heap blocks were freed -- no leaks are possible
+==60659== 
+==60659== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

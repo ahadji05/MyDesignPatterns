@@ -64,7 +64,16 @@ node_t<T,N> *make_new_node( std::deque<key<T,N>> dataset, bool verbose = false )
 }
 
 template<typename T, int N>
-int64_t find_index_of_key( std::deque<key<T,N>> const& dataset, key<T,N> const& k, bool verbose = false ){
+T compare( std::array<T,N> const& a, std::array<T,N> const& b ){
+    T s = 0;
+    for( int dim(0); dim < N; ++dim )
+        s += std::pow( a[dim] - b[dim] ,2);
+    
+    return std::sqrt(s);
+}
+
+template<typename T, int N>
+int64_t find_index_of_key( key<T,N> const& k, std::deque<key<T,N>> const& dataset, bool verbose = false ){
     int64_t index = 0;
     while ( index < (int64_t)dataset.size() ){
         if ( dataset[index].m_id == k.m_id )
@@ -269,4 +278,58 @@ void destroy_kdtree( node_t<T,N> * node, bool verbose = false ){
         destroy_kdtree(node->m_right,verbose);
     
     delete node;
+}
+
+template<typename T, int N>
+void depth_search( node_t<T,N> * node, std::array<T,N> const& queryPoint, key<T,N> &closest, T &distance, int & nDepths, bool verbose = false ){
+
+    nDepths+=1;
+
+    if(node->isLeaf()){
+        std::cout << "reached leaf node: " << node->m_key.m_value[0] << std::endl;
+        return;
+    }
+
+    // find distance from node expanding on the left
+    T distance_left;
+    if(node->m_left){
+        distance_left = compare<T,N>(queryPoint, node->m_left->m_key.m_value);
+    } else {
+        distance_left = 1e9;
+    }
+
+    // find distance from node expanding on the right
+    T distance_right;
+    if(node->m_right){
+        distance_right = compare<T,N>(queryPoint, node->m_right->m_key.m_value);
+    } else {
+        distance_right = 1e9;
+    }
+
+    // select the next node to proceed based on proximity!
+    // before jumping to the next node update the closest point if found a point that is closer.
+    if( distance_left < distance_right ){
+        if(verbose)
+            std::cout << "going left\n";
+        closest  = distance_left < distance ? node->m_left->m_key : closest;
+        distance = distance_left < distance ? distance_left : distance;
+        depth_search<T,N>(node->m_left,queryPoint,closest,distance,nDepths,verbose);
+    } else {
+        if(verbose)
+            std::cout << "going right\n";
+        closest  = distance_right < distance ? node->m_right->m_key : closest;
+        distance = distance_right < distance ? distance_right : distance;
+        depth_search<T,N>(node->m_right,queryPoint,closest,distance,nDepths,verbose);
+    }
+}
+
+template<typename T, int N>
+key<T,N> ann_search( node_t<T,N> * root, std::array<T,N> queryPoint, int & nDepths, bool verbose = false ){
+
+    key<T,N> closest = root->m_key;
+    T distance = compare<T,N>(queryPoint,closest.m_value);
+    nDepths = 0;
+    depth_search<T,N>(root,queryPoint,closest,distance,nDepths,verbose);
+
+    return closest;
 }
