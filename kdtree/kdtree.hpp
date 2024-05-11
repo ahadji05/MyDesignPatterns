@@ -73,18 +73,6 @@ T compare( std::array<T,N> const& a, std::array<T,N> const& b ){
 }
 
 template<typename T, int N>
-int64_t find_index_of_key( key<T,N> const& k, std::deque<key<T,N>> const& dataset, bool verbose = false ){
-    int64_t index = 0;
-    while ( index < (int64_t)dataset.size() ){
-        if ( dataset[index].m_id == k.m_id )
-            return index;
-        ++index;
-    }
-
-    return -1;
-}
-
-template<typename T, int N>
 T find_min( std::deque<key<T,N>> const& dataset, int dim, bool verbose = false ){
     T min_value = 1e9;
     for( key<T,N> const& e : dataset )
