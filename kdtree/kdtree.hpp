@@ -154,7 +154,7 @@ void split_the_dataset_in_two_based_on_median( T median, int dim, std::deque<key
 
 template<typename T, int N>
 void split_balanced(node_t<T,N> * node, bool verbose = false){
-    if( node->m_dataset.size() > 0 ){
+    if( node->m_dataset.size() > 3 ){
         // find the dim with the highest stdev
         int dim = find_dim_with_highest_spread(node->m_dataset, verbose);
         node->m_split_dim = dim;
@@ -246,6 +246,8 @@ void print_kdtree( node_t<T,N> * node ){
         if(node->m_right)
             std::cout << node->m_right->m_key.m_value[0] << " ";
     }
+    std::cout << " - dataset.size() = " << node->m_dataset.size() << " : ";
+    for( auto e : node->m_dataset ) std::cout << e.m_value[0] << " ";
     std::cout << std::endl;
 
     if(node->m_right)
