@@ -14,6 +14,16 @@ class AllocHostMalloc{
         using value_type = T;
         AllocHostMalloc() = default;
         ~AllocHostMalloc() = default;
+
+        static void allocate( T **p, size_t nElems ){
+            std::cout << "Allocating on host!\n";
+            *p = ( T* ) malloc ( nElems * sizeof(T) );
+        }
+
+        static void deallocate( T * p ){
+            std::cout << "Deallocating on host!\n";
+            free( p );
+        }
 };
 
 template<class T> 
@@ -22,6 +32,16 @@ class AllocDeviceCuda{
         using value_type = T;
         AllocDeviceCuda() = default;
         ~AllocDeviceCuda() = default;
+
+        static void allocate( T **p, size_t nElems ){
+            std::cout << "Allocating on Device!\n";
+            *p = ( T* ) malloc ( nElems * sizeof(T) );
+        }
+
+        static void deallocate( T * p ){
+            std::cout << "Deallocating on Device!\n";
+            free( p );
+        }
 };
 
 template<class T> 
@@ -30,6 +50,16 @@ class AllocHostPinned{
         using value_type = T;
         AllocHostPinned() = default;
         ~AllocHostPinned() = default;
+
+        static void allocate( T **p, size_t nElems ){
+            std::cout << "Allocating pinned host!\n";
+            *p = ( T* ) malloc ( nElems * sizeof(T) );
+        }
+
+        static void deallocate( T * p ){
+            std::cout << "Deallocating pinned host!\n";
+            free( p );
+        }
 };
 
 template<typename T, template<typename> class Kind>
@@ -61,16 +91,13 @@ AllocatorFactory<T,Kind>::AllocatorFactory( AllocatorKind kind ) noexcept {
 
 template<typename T, template<typename> class Kind>
 T * AllocatorFactory<T,Kind>::allocate( size_t nElements ) {
-    void * p =  malloc( sizeof( T ) * nElements );
-    if ( !p ) return nullptr;
-    return static_cast<T*>( p );
+    T *p;
+    Kind<T>::allocate( &p, nElements );
+    return p;
 }
 
 
 template<typename T, template<typename> class Kind>
 void AllocatorFactory<T,Kind>::deallocate( T *p, [[maybe_unused]] size_t ) {
-    if ( p ){
-        free( p );
-        p = nullptr;
-    }
+    Kind<T>::deallocate( p );
 }

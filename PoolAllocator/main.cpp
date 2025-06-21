@@ -11,8 +11,8 @@
 #define CudaPinned(type) TYPE_AND_ALLOCATOR(type,AllocHostPinned)
 #define CudaDevice(type) TYPE_AND_ALLOCATOR(type,AllocDeviceCuda)
 
-template<typename T, template<typename> class AllocatorKind>
-void compute( std::vector<T, AllocatorFactory<T,AllocatorKind>> &vec );
+template<typename T, template<typename> class Allocator>
+void compute( std::vector<T, AllocatorFactory<T,Allocator>> &vec );
 
 void compute( std::vector<HostMalloc(float)> &vec ) {
     std::cout << "Computing on host!\n";
@@ -25,32 +25,39 @@ void compute( std::vector<CudaDevice(float)> &vec ) {
 int main( int argc, char *argv[] ){
     std::cout << "Memory Pools and Allocators" << std::endl;
 
-    AllocatorFactory<int,AllocHostMalloc> mallocator( AllocatorKind::HOST_MALLOC );
+    // AllocatorFactory<int,AllocHostMalloc> mallocator( AllocatorKind::HOST_MALLOC );
 
-    int *p = ( int * ) mallocator.allocate( 1 );
+    // int *p = ( int * ) mallocator.allocate( 1 );
 
-    p[0] = 5;
+    // p[0] = 5;
 
-    std::cout << p[0] << std::endl;
+    // std::cout << p[0] << std::endl;
 
-    mallocator.deallocate( p, 1 );
+    // mallocator.deallocate( p, 1 );
 
     std::vector<HostMalloc(float)> vec;
-    std::vector<CudaDevice(float)> vec_d;
+    vec.reserve(10);
+    compute( vec );
 
-    std::list<CudaDevice(float)> list;
+    std::vector<CudaDevice(float)> vecd;
+    vecd.reserve(10);
+    compute( vecd );
 
-    std::map<HostMalloc(int32_t)> map;
+    // std::vector<CudaDevice(float)> vec_d;
 
-    auto listAllocator = list.get_allocator();
+    // std::list<CudaDevice(float)> list;
 
-    std::list<CudaDevice(float)> list2( listAllocator );
+    // std::map<HostMalloc(int32_t)> map;
 
-    vec.reserve( 5 );
+    // auto listAllocator = list.get_allocator();
 
-    vec.push_back( 2 );
+    // std::list<CudaDevice(float)> list2( listAllocator );
 
-    compute( vec_d );
+    // vec.reserve( 5 );
+
+    // vec.push_back( 2 );
+
+    // compute( vec_d );
 
     return EXIT_SUCCESS;
 }
