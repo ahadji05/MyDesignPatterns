@@ -90,6 +90,7 @@ int run_main_routine(){
 
     // pass the global HOST allocator to a vector which eventually stores 2 float values: {4,3}
     std::cout << "0--------------------------\n";
+    /* this line is a bit ridiculus, but without the cast the Factory under runtime manager does not return the correct unique-poiner type */
     std::vector<float, AllocHostMalloc<float>> vec( *static_cast<AllocHostMalloc<float>*>( RunTimeManager::getGlobalAllocator( "HOST" ) ) );
     vec.reserve( 2 ); // alloc +1
     vec.push_back(4);
