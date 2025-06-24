@@ -171,19 +171,53 @@ class AllocatorWrapper {
     public:
         using value_type = T;
 
+        /**
+         * \brief Constructor.
+         */
         AllocatorWrapper( std::shared_ptr<AllocatorFactory<char>> wrapper ) : m_wrapper( wrapper ) {
             #ifdef DEBUG_ALLOCATORS
             std::cout << "Instance of wrapper!" << std::endl;
             #endif
         }
 
+        /**
+         * Interface function: allocate.
+         */
         T* allocate( size_t n ) {
             return reinterpret_cast<T*>( m_wrapper->allocate( n * sizeof( T ) ) );
         }
 
+        /**
+         * Interface function deallocate.
+         */
         void deallocate( T* p, [[maybe_unused]] size_t n = 0 ) {
             m_wrapper->deallocate( (char*) p, n * sizeof( T ) );
         }
 
-        std::shared_ptr<AllocatorFactory<char>> get_wrapper() const { return m_wrapper; }
+        /**
+         *  Returns the underlying shared-allocator wrapper.
+         */
+        std::shared_ptr<AllocatorFactory<char>> getWrapper() const { return m_wrapper; }
+
+        /**
+         * \brief Copy-Constructor.
+         * The copy-constructor is part of the Allocator Rebind Mechanism, which
+         * allows to copy allocators between different types during internal STL operations, such as resize, insert, etc.
+         */
+        template <typename U>
+        AllocatorWrapper( AllocatorWrapper<U> const& other ) noexcept : m_wrapper ( other.m_wrapper ){}
+
+        /* this is needed to enable access to private members of the class through the public interface, e.g., copy-constructor */
+        template <typename U> friend class AllocatorWrapper;
+
+        /**
+         * \brief: STL allocators often define the following rebind structure to let containers know how to produce an Allocator<U> from Allocator<T>. 
+         * 
+         * \NOTE: It is not needed in C++11 or later versions, because this is the default implementation of: rebind::other.
+         * Although, it is still useful to have it for compatibility with pre-C++11 code and libraries.
+         */
+        template <typename U>
+        struct rebind {
+            using other = AllocatorWrapper<U>;
+        };
 };
