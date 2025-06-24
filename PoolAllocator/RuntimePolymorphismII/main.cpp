@@ -1,20 +1,24 @@
 
 #include "AllocatorFactory.hpp"
 
+#include <unordered_map>
+#include <unordered_set>
 #include <iostream>
 #include <numeric>
 #include <memory>
 #include <string>
 #include <vector>
+#include <array>
 #include <list>
 #include <map>
+#include <set>
 
 /**
  * Compute function that does some calculations using a vector that is allocated by a generic allocator.
  */
 void compute( std::vector<float, AllocatorWrapper<float>> &vec ) {
 
-    switch ( vec.get_allocator().get_wrapper()->getKind() ) {
+    switch ( vec.get_allocator().getWrapper()->getKind() ) {
         case AllocatorKind::HOST_MALLOC:
             std::cout << "Compute on host: " << std::accumulate( vec.begin(), vec.end(), 0 ) << std::endl;
             break;
@@ -144,6 +148,41 @@ int main( int argc, char *argv[] ) {
 
     // print allocator's stats: number of calls, and number of bytes allocated
     print_allocators_statistics();
+
+
+    /*************************************************************************************
+     * Example of usage with STL containers: list, map, set, unordered_map, unordered_set.
+     */
+    std::list<
+                int, 
+                AllocatorWrapper<int>
+                > aList( AllocatorWrapper<int>{ RunTimeManager::getGlobalAllocator("HOST") } );
+
+    std::map<int,
+                char, 
+                AllocatorWrapper<char>
+                > aMap( AllocatorWrapper<char>{ RunTimeManager::getGlobalAllocator("DEVICE") } );
+
+    std::set<
+            double, 
+            int,  
+            AllocatorWrapper<double>
+            > aSet( AllocatorWrapper<double>{ RunTimeManager::getGlobalAllocator("HOST") } );
+
+    std::unordered_map<
+                        int, 
+                        char, 
+                        std::hash<int>, 
+                        std::equal_to<int>,
+                        AllocatorWrapper<std::pair<const int, char>>
+                        > anUnorderedMap( AllocatorWrapper<std::pair<const int,char>>{ RunTimeManager::getGlobalAllocator("PINNED") } );
+
+    std::unordered_set<
+                        float,
+                        std::hash<float>,
+                        std::equal_to<float>,
+                        AllocatorWrapper<float>
+                        > anUnorderedSet( AllocatorWrapper<float>{ RunTimeManager::getGlobalAllocator("DEVICE") } );
 
     return EXIT_SUCCESS;
 }
