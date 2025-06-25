@@ -15,8 +15,9 @@ class AllocatorFactory {
     protected:
         AllocatorKind m_kind;
         std::string   m_name;
-        size_t        m_numberOfAllocations;
-        size_t        m_totalAllocatedMemory;
+        size_t        m_numberOfAllocations, m_numberOfDeallocations;
+        size_t        m_totalAllocatedMemory, m_totalDellocatedMemory;
+        size_t        m_currentMemoryUsage;
 
     public:
         using value_type = T;
@@ -24,7 +25,10 @@ class AllocatorFactory {
         AllocatorKind getKind()     const { return this->m_kind;                 }
         std::string   getName()     const { return this->m_name;                 }
         size_t        getNumberOfAllocations() const { return this->m_numberOfAllocations;  }
+        size_t        getNumberOfDeallocations() const { return this->m_numberOfDeallocations;  }
         size_t        getTotalAllocatedMemory() const { return this->m_totalAllocatedMemory; }
+        size_t        getTotalDeallocatedMemory() const { return this->m_totalDellocatedMemory; }
+        size_t        getCurrentMemoryUsage() const { return this->m_currentMemoryUsage; }
 
         AllocatorFactory()  noexcept { 
             #ifdef DEBUG_ALLOCATORS
@@ -40,7 +44,7 @@ class AllocatorFactory {
 
         virtual T *allocate( size_t nElements ) = 0;
 
-        virtual void deallocate( T *p, [[maybe_unused]] size_t size = 0 ) = 0;
+        virtual void deallocate( T *p, size_t nElements ) = 0;
 };
 
 template<class T> 
@@ -55,7 +59,10 @@ class AllocHostMalloc : public AllocatorFactory<T> {
             this->m_kind = AllocatorKind::HOST_MALLOC; 
             this->m_name = "HOST_ALLOCATOR"; 
             this->m_numberOfAllocations  = 0;
+            this->m_numberOfDeallocations = 0;
             this->m_totalAllocatedMemory = 0;
+            this->m_totalDellocatedMemory = 0;
+            this->m_currentMemoryUsage = 0;
         }
 
         ~AllocHostMalloc() = default;
@@ -65,18 +72,23 @@ class AllocHostMalloc : public AllocatorFactory<T> {
                 throw std::runtime_error("The allocator with name "+this->m_name+" is not compatible with AllocatorKind::HOST_MALLOC!");
             
             #ifdef DEBUG_ALLOCATORS
-            std::cout << "Allocating on host!\n";
+            std::cout << "Allocating on host! ( " << nElements * sizeof( T ) << " ) bytes \n";
             #endif
 
             ++this->m_numberOfAllocations;
-            size_t nbytes = nElements * sizeof(T);
+            size_t nbytes = nElements * sizeof( T );
             this->m_totalAllocatedMemory += nbytes;
+            this->m_currentMemoryUsage += nbytes;
             return ( T* ) malloc ( nbytes );
         }
 
-        void deallocate( T * p, [[maybe_unused]] size_t size ) override {
+        void deallocate( T * p, size_t nElements ) override {
+            ++this->m_numberOfDeallocations;
+            this->m_totalDellocatedMemory += ( nElements * sizeof( T ) );
+            this->m_currentMemoryUsage -= ( nElements * sizeof( T ) );
+
             #ifdef DEBUG_ALLOCATORS
-            std::cout << "Deallocating on host!\n";
+            std::cout << "Deallocating on host! ( " << nElements * sizeof( T ) << " ) bytes \n";
             #endif
             free( p );
         }
@@ -94,7 +106,10 @@ class AllocDeviceCuda : public AllocatorFactory<T> {
             this->m_kind = AllocatorKind::DEVICE_CUDA;
             this->m_name = "DEVICE_ALLOCATOR";
             this->m_numberOfAllocations  = 0;
+            this->m_numberOfDeallocations = 0;
             this->m_totalAllocatedMemory = 0;
+            this->m_totalDellocatedMemory = 0;
+            this->m_currentMemoryUsage = 0;
         }
 
         ~AllocDeviceCuda() = default;
@@ -109,12 +124,17 @@ class AllocDeviceCuda : public AllocatorFactory<T> {
             #endif
 
             ++this->m_numberOfAllocations;
-            size_t nbytes = nElements * sizeof(T);
+            size_t nbytes = nElements * sizeof( T );
             this->m_totalAllocatedMemory += nbytes;
+            this->m_currentMemoryUsage += nbytes;
             return ( T* ) malloc ( nbytes );
         }
 
-        void deallocate( T * p, [[maybe_unused]] size_t size ) override {
+        void deallocate( T * p, size_t nElements ) override {
+            ++this->m_numberOfDeallocations;
+            this->m_totalDellocatedMemory += ( nElements * sizeof( T ) );
+            this->m_currentMemoryUsage -= ( nElements * sizeof( T ) );
+
             #ifdef DEBUG_ALLOCATORS
             std::cout << "Deallocating on device!\n";
             #endif
@@ -134,7 +154,10 @@ class AllocHostPinned : public AllocatorFactory<T> {
             this->m_kind = AllocatorKind::HOST_PINNED_CUDA;
             this->m_name = "PINNED_ALLOCATOR";
             this->m_numberOfAllocations  = 0;
+            this->m_numberOfDeallocations = 0;
             this->m_totalAllocatedMemory = 0;
+            this->m_totalDellocatedMemory = 0;
+            this->m_currentMemoryUsage = 0;
         }
         
         ~AllocHostPinned() = default;
@@ -149,13 +172,17 @@ class AllocHostPinned : public AllocatorFactory<T> {
             #endif
 
             ++this->m_numberOfAllocations;
-            size_t nbytes = nElements * sizeof(T);
+            size_t nbytes = nElements * sizeof( T );
             this->m_totalAllocatedMemory += nbytes;
+            this->m_currentMemoryUsage += nbytes;
             return ( T* ) malloc ( nbytes );
-
         }
 
-        void deallocate( T * p, [[maybe_unused]] size_t size ) override {
+        void deallocate( T * p, size_t nElements ) override {
+            ++this->m_numberOfDeallocations;
+            this->m_totalDellocatedMemory += ( nElements * sizeof( T ) );
+            this->m_currentMemoryUsage -= ( nElements * sizeof( T ) );
+
             #ifdef DEBUG_ALLOCATORS
             std::cout << "Deallocating pinned on host!\n";
             #endif
@@ -190,7 +217,7 @@ class AllocatorWrapper {
         /**
          * Interface function deallocate.
          */
-        void deallocate( T* p, [[maybe_unused]] size_t n = 0 ) {
+        void deallocate( T* p, size_t n ) {
             m_wrapper->deallocate( (char*) p, n * sizeof( T ) );
         }
 
