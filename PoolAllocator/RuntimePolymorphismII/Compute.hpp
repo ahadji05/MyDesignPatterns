@@ -25,3 +25,9 @@ void compute( std::vector<float, AllocatorWrapper<float>> &vec );
  * \brief Example of usage with STL containers: list, map, set, unordered_map, unordered_set.
  */
 void exampleStlContainers();
+
+
+/**
+ * \brief A basic example that uses a memory pool for allocations/frees.
+ */
+void memory_pool_example();
