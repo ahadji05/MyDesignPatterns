@@ -1,19 +1,19 @@
 
-#include "MemoryPoolContiguous.hpp"
-
+#include "MemoryPool.hpp"
 #include <cmath>
 
 
 /**
  * \brief
  */
-MemoryPool::MemoryPool() {}
+MemoryPool::MemoryPool(){}
 
 
 /**
  * \brief
  */
-void MemoryPool::initialize_memory_pool( size_t numberOfBytes, size_t blockSize ) {
+void MemoryPool::initialize_memory_pool( size_t numberOfBytes, size_t blockSize )
+{
     m_blockSize = blockSize;
     m_numberOfBlocks = _num_blocks_requested( numberOfBytes );
     m_blocks.resize( m_numberOfBlocks );
@@ -30,7 +30,8 @@ void MemoryPool::initialize_memory_pool( size_t numberOfBytes, size_t blockSize 
 /**
  * \brief
  */
-MemoryPool::~MemoryPool() {
+MemoryPool::~MemoryPool()
+{
     for ( size_t i = 0; i < m_numberOfBlocks; ++i )
         delete m_blocks[i];
 
@@ -43,7 +44,8 @@ MemoryPool::~MemoryPool() {
 /**
  * \brief
  */
-size_t MemoryPool::_num_blocks_requested( size_t nBytes ) {
+size_t MemoryPool::_num_blocks_requested( size_t nBytes )
+{
     return 1 + ( ( nBytes - 1 ) / m_blockSize);
 }
 
@@ -51,8 +53,8 @@ size_t MemoryPool::_num_blocks_requested( size_t nBytes ) {
 /**
  * \brief
  */
-std::pair<size_t,size_t> MemoryPool::_find_allocated_block( void *ptr ) {
-
+std::pair<size_t,size_t> MemoryPool::_find_allocated_block( void *ptr )
+{
     auto it = m_allocMap.find( ptr );
 
     #if DEBUG_MEMORY_POOL
@@ -67,8 +69,8 @@ std::pair<size_t,size_t> MemoryPool::_find_allocated_block( void *ptr ) {
 /**
  * \brief
  */
-void MemoryPool::_release_block( Block *block ) {
-
+void MemoryPool::_release_block( Block *block )
+{
     auto it = m_blockIndex.find( block );
 
     #if DEBUG_MEMORY_POOL
@@ -87,8 +89,8 @@ void MemoryPool::_release_block( Block *block ) {
 /**
  * \brief
  */
-void MemoryPool::_allocate_block( Block *block ) {
-
+void MemoryPool::_allocate_block( Block *block )
+{
     auto it = m_blockIndex.find( block );
 
     #if DEBUG_MEMORY_POOL
@@ -107,8 +109,8 @@ void MemoryPool::_allocate_block( Block *block ) {
 /**
  * \brief
  */
-void * MemoryPool::allocate( size_t nBytes ) {
-
+void * MemoryPool::allocate( size_t nBytes )
+{
     size_t blocksNeeded = _num_blocks_requested( nBytes );
 
     // Find contiguous free blocks
@@ -157,7 +159,8 @@ void * MemoryPool::allocate( size_t nBytes ) {
 /**
  * \brief
  */
-void MemoryPool::deallocate( void *ptr ) {
+void MemoryPool::deallocate( void *ptr )
+{
 #if DEBUG_MEMORY_POOL
     try {
 #endif

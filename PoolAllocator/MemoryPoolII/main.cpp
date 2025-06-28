@@ -1,4 +1,5 @@
-#include "MemoryPoolContiguous.hpp"
+
+#include "AlignedMemoryPool.hpp"
 #include <chrono>
 
 const size_t POOL_SIZE = 1E+9;

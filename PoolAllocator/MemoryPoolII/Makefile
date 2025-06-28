@@ -3,7 +3,7 @@ CXX = g++
 
 CXXFLAGS = -std=c++14 -Wall -Wextra -O3
 
-OBJ = main.o MemoryPool.o
+OBJ = main.o MemoryPool.o AlignedMemoryPool.o ContiguousMemoryPool.o
 
 TARGET = main.exe
 
