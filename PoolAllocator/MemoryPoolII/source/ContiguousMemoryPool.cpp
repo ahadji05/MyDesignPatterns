@@ -1,6 +1,16 @@
 
 #include "ContiguousMemoryPool.hpp"
 
+void *ContiguousMemoryPool::allocate( size_t nBytes )
+{
+    return this->do_allocate( nBytes );
+}
+
+void ContiguousMemoryPool::deallocate( void * p )
+{
+    return this->do_deallocate( p );
+}
+
 ContiguousMemoryPool::ContiguousMemoryPool( size_t numberOfBytes, size_t blockSize )
 {
     // first we call the base-class constructor to initilize internal member variables.

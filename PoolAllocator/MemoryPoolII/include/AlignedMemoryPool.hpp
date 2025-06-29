@@ -15,4 +15,6 @@ class AlignedMemoryPool : public MemoryPool {
     public:
         AlignedMemoryPool( size_t numberOfBytes );
         ~AlignedMemoryPool();
+        void *allocate( size_t nBytes );
+        void  deallocate( void *p );
 };

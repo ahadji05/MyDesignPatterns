@@ -9,4 +9,6 @@ class ContiguousMemoryPool : public MemoryPool {
     public:
         ContiguousMemoryPool( size_t numberOfBytes, size_t blockSize );
         ~ContiguousMemoryPool();
+        void *allocate( size_t nBytes );
+        void  deallocate( void *p );
 };

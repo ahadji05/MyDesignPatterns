@@ -1,6 +1,16 @@
 
 #include "AlignedMemoryPool.hpp"
 
+void *AlignedMemoryPool::allocate( size_t nBytes )
+{ 
+    return this->do_allocate( nBytes );
+}
+
+void AlignedMemoryPool::deallocate( void * p )
+{
+    return this->do_deallocate( p );
+}
+
 AlignedMemoryPool::AlignedMemoryPool( size_t numberOfBytes )
 {
     // specialize implementation based on OS; Linux, Aplle, or Windows
@@ -14,15 +24,19 @@ AlignedMemoryPool::AlignedMemoryPool( size_t numberOfBytes )
         static_assert(false, "Non-supported OS detected in AlignedMemoryPool( size_t numberOfBytes )");
     #endif
 
+    #ifdef DEBUG_MEMORY_POOL
+        std::cout << "Page-alignment: " << this->m_blockSize << std::endl;
+    #endif
+
     // first we call the base-class constructor to initilize internal member variables
     this->initialize_memory_pool( numberOfBytes, this->m_blockSize );
 
     // then we allocate a large aligned piece of memory
     #if defined(__linux__) || defined(__APPLE__)
-        if ( posix_memalign( (void**)&m_pool, this->m_blockSize, this->m_blockSize ) != 0 )
+        if ( posix_memalign( (void**)&m_pool, this->m_blockSize, this->m_blockSize * this->m_numberOfBlocks ) != 0 )
             std::runtime_error("AlignedMemoryPool: posix_memalign failed");
     #elif _WIN32
-        m_pool = ( void* ) VirtualAlloc( nullptr, this->m_blockSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE );
+        m_pool = ( void* ) VirtualAlloc( nullptr, this->m_blockSize * this->m_numberOfBlocks, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE );
         if ( !m_pool )
             std::runtime_error("AlignedMemoryPool: VirtualAlloc failed");
     #endif

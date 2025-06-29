@@ -109,9 +109,13 @@ void MemoryPool::_allocate_block( Block *block )
 /**
  * \brief
  */
-void * MemoryPool::allocate( size_t nBytes )
+void * MemoryPool::do_allocate( size_t nBytes )
 {
     size_t blocksNeeded = _num_blocks_requested( nBytes );
+
+    #ifdef DEBUG_MEMORY_POOL
+        std::cout << "alloc blocks needed: " << blocksNeeded << std::endl;
+    #endif
 
     // Find contiguous free blocks
     size_t startIdx = m_numberOfBlocks;
@@ -140,9 +144,15 @@ void * MemoryPool::allocate( size_t nBytes )
         }
 
     if ( count < blocksNeeded ) {
-        std::cerr << "Not enough contiguous blocks available\n";
+    #ifdef DEBUG_MEMORY_POOL
+            std::cerr << "Not enough contiguous blocks available\n";
+    #endif
         return nullptr;
     }
+
+    #ifdef DEBUG_MEMORY_POOL
+        std::cout << "alloc: [ " << startIdx << " - " <<  startIdx + count - 1 << " ]" << std::endl;
+    #endif
 
     // Mark blocks as used
     for ( size_t i = 0; i < blocksNeeded; ++i )
@@ -159,20 +169,19 @@ void * MemoryPool::allocate( size_t nBytes )
 /**
  * \brief
  */
-void MemoryPool::deallocate( void *ptr )
+void MemoryPool::do_deallocate( void *ptr )
 {
 #if DEBUG_MEMORY_POOL
     try {
 #endif
-
         auto pair = _find_allocated_block( ptr );
-        size_t  startIndex = pair.first;
-        int64_t numBlocks  = (int64_t) pair.second;
-        for ( int64_t i = (numBlocks - 1); i >= 0; --i )
-            _release_block( m_blocks[startIndex + i] );
+        size_t  startIdx = pair.first;
+        int64_t count  = (int64_t) pair.second;
+        for ( int64_t i = (count - 1); i >= 0; --i )
+            _release_block( m_blocks[startIdx + i] );
         m_allocMap.erase( ptr );
-
 #if DEBUG_MEMORY_POOL
+    std::cout << "dealloc: [ " << startIdx + count - 1 << " - " << startIdx << " ]" << std::endl;
     } catch (...) {
         std::cerr << "Attempted to deallocate invalid pointer" << std::endl;
     }
