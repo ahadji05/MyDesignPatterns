@@ -5,6 +5,7 @@ add_library( mempool
     AlignedMemoryPool.cpp 
     ContiguousMemoryPool.cpp 
     CudaMemoryPool.cpp 
+    saxpy_kernel.cu
 )
 
 if(USE_CUDA)

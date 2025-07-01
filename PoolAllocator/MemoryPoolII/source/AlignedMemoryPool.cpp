@@ -36,7 +36,7 @@ AlignedMemoryPool::AlignedMemoryPool( size_t numberOfBytes )
         if ( posix_memalign( (void**)&m_pool, this->m_blockSize, this->m_blockSize * this->m_numberOfBlocks ) != 0 )
             std::runtime_error("AlignedMemoryPool: posix_memalign failed");
     #elif _WIN32
-        m_pool = ( void* ) VirtualAlloc( nullptr, this->m_blockSize * this->m_numberOfBlocks, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE );
+        m_pool = ( char* ) VirtualAlloc( nullptr, this->m_blockSize * this->m_numberOfBlocks, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE );
         if ( !m_pool )
             std::runtime_error("AlignedMemoryPool: VirtualAlloc failed");
     #endif

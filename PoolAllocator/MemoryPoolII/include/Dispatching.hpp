@@ -4,6 +4,22 @@
 #include "AlignedMemoryPool.hpp"
 #include "CudaMemoryPool.hpp"
 
+#include <typeinfo>
+#include <cxxabi.h>
+#include <memory>
+
+#define THROW_TAG_DISPATCH_ERROR(name,type) throw std::runtime_error(#name" failed to tag-dispatch using type: "+getTypeName<type>());
+
+template<typename T>
+std::string getTypeName() {
+    int status = 0;
+    const char* name = typeid(T).name();
+    char* demangled = abi::__cxa_demangle(name, nullptr, nullptr, &status);
+    std::string result = (status == 0) ? demangled : name;
+    free(demangled);
+    return result;
+}
+
 /**
  * @brief Compile-time trait to check if a memory pool type is a CPU-based pool.
  *
@@ -55,7 +71,8 @@ void dispatch( Callable && callable, Args && ... args) {
 }
 
 /**
- * @brief Dispatches a callable object based on the static type of a tag, forwarding all arguments.
+ * @brief Dispatches a callable object with its arguments based on the static type of a tag, using 
+ * perfect forwarding.
  *
  * This function template acts as a bridge to the compile-time dispatcher by deducing the type `T`
  * from the tag object (typically used for type-based kernel dispatching). It forwards the callable

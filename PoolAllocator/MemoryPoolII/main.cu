@@ -1,34 +1,29 @@
 
-#include "CudaMemoryPool.hpp"
-#include "ContiguousMemoryPool.hpp"
-#include "AlignedMemoryPool.hpp"
+#include "Dispatching.hpp"
+#include "SaxpyKernel.hpp"
+
 #include <chrono>
+#include <vector>
 
 const size_t POOL_SIZE = 1E+9;
 
-__global__ void saxpy(int n, float a, float *x, float *y) {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < n) {
-        y[i] = a * x[i] + y[i];
-    }
-}
-
 int main() {
-
-    CudaMemoryPool pool( POOL_SIZE, 4096 );
+try
+{
+    ContiguousMemoryPool pool( POOL_SIZE, 4096 );
 
     const auto start { std::chrono::steady_clock::now() };
-    int i = 0;
-    while ( i < 5 ) {
+    int k = 0;
+    while ( k < 1 ) {
         char * ptr = ( char* ) pool.allocate( 100000 );
         if ( !ptr ) break;
 
-        float *a = ( float* ) ptr;
-        float *b = ( float* ) ( ptr + 50000 );
-        // for ( int j = 0; j < 12500; ++j )
-        //     a[j] += b[j];
+        float a = 1.5;
+        float *x = ( float* ) ptr;
+        float *y = ( float* ) ( ptr + 50000 );
 
-        saxpy<<<99,1024>>>(100000, 1, a, b);
+        // zero-copy dispatch of SaxpyKernel based on the type of the pool
+        dispatch_from( pool, SaxpyKernel{}, 12500, a, x, y );
 
         auto ptr1 = pool.allocate( 4096 );
         if ( !ptr1 ) break;
@@ -40,13 +35,17 @@ int main() {
         pool.deallocate( ptr1 );
         pool.deallocate( ptr );
 
-        ++i;
-        if ( i % 100000 == 0 ) std::cout << i << std::endl;
+        ++k;
+        if ( k % 100000 == 0 ) std::cout << k << std::endl;
     }
-    std::cout << "max i : " <<  i << std::endl;
+    std::cout << "max k : " <<  k << std::endl;
     const auto finish { std::chrono::steady_clock::now() };
     const std::chrono::duration<double> elapsed_seconds{ finish - start };
     std::cout << "time: " << elapsed_seconds.count() << " seconds\n";
-
+}
+catch(const std::exception& e)
+{
+    std::cerr << e.what() << '\n';
+}
     return EXIT_SUCCESS;
 }
