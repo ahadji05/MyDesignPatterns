@@ -2,13 +2,13 @@
 
 #include "MemoryPool.hpp"
 
-class ContiguousMemoryPool : public MemoryPool {
+class HostMemoryPool : public MemoryPool {
     private:
         char * m_pool = nullptr;
 
     public:
-        ContiguousMemoryPool( size_t numberOfBytes, size_t blockSize );
-        ~ContiguousMemoryPool();
+        HostMemoryPool( size_t numberOfBytes, size_t blockSize );
+        ~HostMemoryPool();
         void *allocate( size_t nBytes );
         void  deallocate( void *p );
 };
