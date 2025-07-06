@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ContiguousMemoryPool.hpp"
+#include "HostMemoryPool.hpp"
 #include "AlignedMemoryPool.hpp"
 #include "CudaMemoryPool.hpp"
 
@@ -20,10 +20,11 @@ std::string getTypeName() {
     return result;
 }
 
-/**
+
+/*************************************************************************************************************
  * @brief Compile-time trait to check if a memory pool type is a CPU-based pool.
  *
- * Evaluates to `true` if the type `T` is either `AlignedMemoryPool` or `ContiguousMemoryPool`,
+ * Evaluates to `true` if the type `T` is either `AlignedMemoryPool` or `HostMemoryPool`,
  * which are assumed to represent CPU-accessible memory pools.
  *
  * @tparam T The memory pool type to check.
@@ -31,9 +32,10 @@ std::string getTypeName() {
  * @retval false Otherwise.
  */
 template<typename T>
-constexpr bool is_cpu_pool_v = std::is_same_v<T, AlignedMemoryPool> || std::is_same_v<T, ContiguousMemoryPool>;
+constexpr bool is_cpu_pool_v = std::is_same_v<T, AlignedMemoryPool> || std::is_same_v<T, HostMemoryPool>;
 
-/**
+
+/*************************************************************************************************************
  * @brief Compile-time trait to check if a memory pool type is a GPU-based pool.
  *
  * Evaluates to `true` if the type `T` is `CudaMemoryPool`, which represents a CUDA-capable
@@ -46,7 +48,8 @@ constexpr bool is_cpu_pool_v = std::is_same_v<T, AlignedMemoryPool> || std::is_s
 template<typename T>
 constexpr bool is_gpu_pool_v = std::is_same_v<T, CudaMemoryPool>;
 
-/**
+
+/*************************************************************************************************************
  * @brief Invokes the callable using compile-time dispatch based on the tag type.
  *
  * This function performs a call to the callable object's templated call operator,
@@ -70,7 +73,8 @@ void dispatch( Callable && callable, Args && ... args) {
     callable.template operator()<Tag>( std::forward<Args>( args ) ... );
 }
 
-/**
+
+/*************************************************************************************************************
  * @brief Dispatches a callable object with its arguments based on the static type of a tag, using 
  * perfect forwarding.
  *

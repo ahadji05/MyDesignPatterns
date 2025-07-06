@@ -8,6 +8,11 @@
 #include <windows.h>
 #endif
 
+/*************************************************************************************************************
+ * @brief Implements a memory pool for aligned memory management.
+ * This class allocates memory using aligned allocation and deallocates it using aligned deallocation.
+ * For Linux and macOS, it uses `posix_memalign`, and for Windows, it uses `virtualAlloc` and `VirtualFree`.
+ */
 class AlignedMemoryPool : public MemoryPool {
     private:
         char * m_pool = nullptr;

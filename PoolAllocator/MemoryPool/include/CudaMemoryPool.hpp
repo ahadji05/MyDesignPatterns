@@ -2,6 +2,10 @@
 
 #include "MemoryPool.hpp"
 
+/*************************************************************************************************************
+ * @brief Implements a memory pool for CUDA memory management.
+ * This class allocates memory using cudaMalloc and deallocates it using cudaFree.
+ */
 class CudaMemoryPool : public MemoryPool {
     private:
         char * m_pool = nullptr;

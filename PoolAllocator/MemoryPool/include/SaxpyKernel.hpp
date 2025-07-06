@@ -5,8 +5,9 @@ void saxpy_cpu( int n, float a, float const *__restrict__ const x, float *__rest
 
 __global__ void saxpy_gpu( int n, float a, float const *__restrict__ const x, float *__restrict__ const y );
 
-// Functor for saxpy-kernel dispatching
-// ------------------------------------
+/*************************************************************************************************************
+ * Functor for saxpy-kernel dispatching
+ */
 struct SaxpyKernel {
 
     template<typename Tag>
