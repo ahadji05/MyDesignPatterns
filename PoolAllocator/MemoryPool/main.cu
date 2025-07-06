@@ -10,7 +10,7 @@ const size_t POOL_SIZE = 1E+9;
 int main() {
 try
 {
-    ContiguousMemoryPool pool( POOL_SIZE, 4096 );
+    HostMemoryPool pool( POOL_SIZE, 4096 );
 
     const auto start { std::chrono::steady_clock::now() };
     int k = 0;
