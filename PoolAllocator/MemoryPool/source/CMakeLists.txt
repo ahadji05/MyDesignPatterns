@@ -3,7 +3,7 @@
 add_library( mempool
     MemoryPool.cpp
     AlignedMemoryPool.cpp 
-    ContiguousMemoryPool.cpp 
+    HostMemoryPool.cpp 
     CudaMemoryPool.cpp 
     saxpy_kernel.cu
 )
